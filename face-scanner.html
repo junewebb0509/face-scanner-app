@@ -26,11 +26,12 @@
       margin: auto;
       box-shadow: 0px 4px 20px rgba(139, 94, 60, 0.1);
     }
-    video {
+    #webcam-container {
       border-radius: 15px;
-      width: 100%;
-      max-width: 480px;
-      margin-bottom: 20px;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 20px auto;
+      overflow: hidden;
     }
     #label-container {
       margin-top: 20px;
@@ -49,7 +50,7 @@
 <body>
   <div class="scanner-container">
     <h1>La Belle Face Scanner</h1>
-    <div><video autoplay muted id="webcam" width="300" height="300"></video></div>
+    <div id="webcam-container"></div>
     <div id="label-container"></div>
     <div class="suggestion-box" id="suggestion-box">Analyzing your skin type...</div>
   </div>
@@ -69,7 +70,7 @@
       webcam = new tmImage.Webcam(300, 300, true);
       await webcam.setup();
       await webcam.play();
-      document.getElementById("webcam").appendChild(webcam.canvas);
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label-container");
 
       window.requestAnimationFrame(loop);
