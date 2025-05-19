@@ -44,6 +44,19 @@
       margin-top: 20px;
       font-size: 1em;
       color: #5a4033;
+      min-height: 60px;
+    }
+    #product-links {
+      margin-top: 15px;
+      font-size: 1em;
+      color: #8b5e3c;
+    }
+    #product-links a {
+      color: #8b5e3c;
+      text-decoration: none;
+    }
+    #product-links a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -53,6 +66,7 @@
     <div id="webcam-container"></div>
     <div id="label-container"></div>
     <div class="suggestion-box" id="suggestion-box">Analyzing your skin type...</div>
+    <div id="product-links"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
@@ -89,14 +103,31 @@
       labelContainer.innerHTML = "Detected: <strong>" + topPrediction.className + "</strong>";
 
       const suggestionBox = document.getElementById("suggestion-box");
+      const productLinks = document.getElementById("product-links");
+
       if (topPrediction.className === "Oily") {
-        suggestionBox.innerHTML = "✨ Oily Skin: Use matte foundations, oil-control primer, and blotting powder. Try Fenty Pro Filt’r Soft Matte or NYX Shine Killer.";
+        suggestionBox.innerHTML = "✨ Oily Skin: Use matte foundations, oil-control primer, and blotting powder.";
+        productLinks.innerHTML = `
+          <a href="https://www.sephora.com/product/fenty-pro-filtr-soft-matte-foundation-P425429" target="_blank">Fenty Pro Filt’r Soft Matte Foundation</a><br/>
+          <a href="https://www.sephora.com/product/nyx-shine-killer-primer-P429970" target="_blank">NYX Shine Killer Primer</a><br/>
+          <a href="https://www.sephora.com/product/benefit-hello-happy-matte-powder-P454909" target="_blank">Benefit Hello Happy Blotting Powder</a>
+        `;
       } else if (topPrediction.className === "Dry") {
-        suggestionBox.innerHTML = "💧 Dry Skin: Use hydrating foundations, luminous primers, and creamy concealers. Try NARS Radiant or Milk Hydro Grip.";
+        suggestionBox.innerHTML = "💧 Dry Skin: Use hydrating foundations, luminous primers, and creamy concealers.";
+        productLinks.innerHTML = `
+          <a href="https://www.sephora.com/product/nars-natural-radiant-longwear-foundation-P427631" target="_blank">NARS Natural Radiant Longwear Foundation</a><br/>
+          <a href="https://www.sephora.com/product/milk-hydro-grip-primer-P463099" target="_blank">Milk Hydro Grip Primer</a><br/>
+          <a href="https://www.sephora.com/product/it-cosmetics-cc-cream-P393528" target="_blank">IT Cosmetics CC Cream</a>
+        `;
       } else if (topPrediction.className === "Normal") {
-        suggestionBox.innerHTML = "🌟 Normal Skin: Use balanced foundations and light powder. Try MAC Studio Fix or e.l.f. Halo Glow.";
+        suggestionBox.innerHTML = "🌟 Normal Skin: Use balanced foundations and light powder.";
+        productLinks.innerHTML = `
+          <a href="https://www.sephora.com/product/mac-studio-fix-fluid-SPF-15-P150511" target="_blank">MAC Studio Fix Fluid SPF 15</a><br/>
+          <a href="https://www.sephora.com/product/elf-halo-glow-setting-powder-P482987" target="_blank">e.l.f. Halo Glow Setting Powder</a>
+        `;
       } else {
         suggestionBox.innerHTML = "Analyzing...";
+        productLinks.innerHTML = "";
       }
     }
 
