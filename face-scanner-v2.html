@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Face Scanner App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    video {
+      border: 2px solid #333;
+      border-radius: 8px;
+      max-width: 100%;
+      height: auto;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #007700;
+    }
+  </style>
+</head>
+<body>
+  <h1>Face Scanner App</h1>
+  <video id="video" autoplay playsinline width="320" height="240"></video>
+  <br />
+  <button id="analyzeBtn">Analyze Skin</button>
+  <div id="result"></div>
+
+  <script>
+    const video = document.getElementById('video');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const result = document.getElementById('result');
+
+    // Ask for camera access and stream video
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (error) {
+        result.textContent = 'Error accessing camera: ' + error.message;
+      }
+    }
+
+    analyzeBtn.addEventListener('click', () => {
+      // Placeholder for AI skin analysis
+      result.textContent = "Analyzing skin... (this is just a demo)";
+      setTimeout(() => {
+        result.textContent = "Skin analysis complete! Recommended makeup: Natural look with soft blush.";
+      }, 2000);
+    });
+
+    startCamera();
+  </script>
+</body>
+</html>
