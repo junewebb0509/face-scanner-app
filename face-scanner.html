@@ -2,133 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>La Belle Face Scanner</title>
   <style>
-    /* Use fonts and colors inspired by your Wix site */
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-
     body {
-      font-family: 'Montserrat', sans-serif;
-      background: #F6D1C1; /* soft pink from your site */
-      color: #5A3E36; /* warm dark brown */
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #fff9f7;
+      color: #3d3d3d;
       text-align: center;
-      padding: 30px 15px;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      padding: 20px;
     }
-
     h1 {
-      font-weight: 700;
+      font-size: 2.5em;
+      color: #8b5e3c;
       margin-bottom: 10px;
     }
-
+    .scanner-container {
+      background: #ffffff;
+      border: 2px solid #eeded4;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0px 4px 20px rgba(139, 94, 60, 0.1);
+    }
     video {
-      border: 3px solid #5A3E36;
-      border-radius: 12px;
-      max-width: 90vw;
-      height: auto;
-      box-shadow: 0 0 15px rgba(90, 62, 54, 0.5);
-    }
-
-    button {
-      background: #5A3E36;
-      color: #F6D1C1;
-      border: none;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-top: 20px;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 5px 10px rgba(90, 62, 54, 0.4);
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background: #7f5b4f;
-    }
-
-    #result {
-      margin-top: 25px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      min-height: 80px;
-      max-width: 320px;
-      background: #fff0f0;
-      padding: 15px 20px;
       border-radius: 15px;
-      color: #5A3E36;
-      box-shadow: 0 0 10px rgba(90, 62, 54, 0.3);
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 20px;
     }
-
+    #label-container {
+      margin-top: 20px;
+      font-size: 1.3em;
+    }
+    .suggestion-box {
+      background-color: #fff1ea;
+      padding: 15px;
+      border-radius: 15px;
+      margin-top: 20px;
+      font-size: 1em;
+      color: #5a4033;
+    }
   </style>
 </head>
 <body>
-  <h1>La Belle Face Scanner</h1>
-  <video id="video" autoplay playsinline width="320" height="240"></video>
-  <br />
-  <button id="analyzeBtn">Analyze My Skin</button>
-  <div id="result"></div>
+  <div class="scanner-container">
+    <h1>La Belle Face Scanner</h1>
+    <div><video autoplay muted id="webcam" width="300" height="300"></video></div>
+    <div id="label-container"></div>
+    <div class="suggestion-box" id="suggestion-box">Analyzing your skin type...</div>
+  </div>
 
-  <script>
-    const video = document.getElementById('video');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const result = document.getElementById('result');
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script type="text/javascript">
+    const URL = "https://teachablemachine.withgoogle.com/models/GhG5YpKyYh/";
+    let model, webcam, labelContainer, maxPredictions;
 
-    // Start camera
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-      } catch (err) {
-        result.textContent = 'Cannot access camera: ' + err.message;
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+
+      webcam = new tmImage.Webcam(300, 300, true);
+      await webcam.setup();
+      await webcam.play();
+      document.getElementById("webcam").appendChild(webcam.canvas);
+      labelContainer = document.getElementById("label-container");
+
+      window.requestAnimationFrame(loop);
+    }
+
+    async function loop() {
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+      const prediction = await model.predict(webcam.canvas);
+      prediction.sort((a, b) => b.probability - a.probability);
+      const topPrediction = prediction[0];
+      labelContainer.innerHTML = "Detected: <strong>" + topPrediction.className + "</strong>";
+
+      const suggestionBox = document.getElementById("suggestion-box");
+      if (topPrediction.className === "Oily") {
+        suggestionBox.innerHTML = "✨ Oily Skin: Use matte foundations, oil-control primer, and blotting powder. Try Fenty Pro Filt’r Soft Matte or NYX Shine Killer.";
+      } else if (topPrediction.className === "Dry") {
+        suggestionBox.innerHTML = "💧 Dry Skin: Use hydrating foundations, luminous primers, and creamy concealers. Try NARS Radiant or Milk Hydro Grip.";
+      } else if (topPrediction.className === "Normal") {
+        suggestionBox.innerHTML = "🌟 Normal Skin: Use balanced foundations and light powder. Try MAC Studio Fix or e.l.f. Halo Glow.";
+      } else {
+        suggestionBox.innerHTML = "Analyzing...";
       }
     }
 
-    // Mock skin analysis logic with tailored makeup suggestions
-    function analyzeSkin() {
-      // Randomly simulate one of three skin types & issues for demo
-      const skinTypes = [
-        {
-          type: 'Dry Skin',
-          issues: ['flakiness', 'dullness'],
-          makeup: 'Use hydrating foundation and cream blush. Apply blush on cheeks and temples for a fresh glow.'
-        },
-        {
-          type: 'Oily Skin',
-          issues: ['shine', 'enlarged pores'],
-          makeup: 'Use matte foundation and powder blush. Focus blush application on cheekbones for definition.'
-        },
-        {
-          type: 'Normal/Combination Skin',
-          issues: ['balanced moisture', 'slight redness'],
-          makeup: 'Use lightweight foundation and soft pink blush. Apply blush lightly on apples of cheeks.'
-        }
-      ];
-
-      // Pick a random skin type to simulate analysis
-      const analysis = skinTypes[Math.floor(Math.random() * skinTypes.length)];
-
-      return analysis;
-    }
-
-    analyzeBtn.addEventListener('click', () => {
-      result.textContent = 'Analyzing your skin... please wait.';
-      setTimeout(() => {
-        const analysis = analyzeSkin();
-        result.innerHTML = `
-          <strong>Skin Type:</strong> ${analysis.type} <br/>
-          <strong>Issues Detected:</strong> ${analysis.issues.join(', ')} <br/>
-          <strong>Makeup Suggestions:</strong> ${analysis.makeup}
-        `;
-      }, 2500);
-    });
-
-    startCamera();
+    init();
   </script>
 </body>
 </html>
