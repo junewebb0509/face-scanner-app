@@ -1,51 +1,138 @@
-const video = document.getElementById('videoElement');
-const constraints = { video: { facingMode: 'user' } };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>La Belle Face Scanner</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #fff9f7;
+      color: #3d3d3d;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2.5em;
+      color: #8b5e3c;
+      margin-bottom: 10px;
+    }
+    .scanner-container {
+      background: #ffffff;
+      border: 2px solid #eeded4;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0px 4px 20px rgba(139, 94, 60, 0.1);
+    }
+    #webcam-container {
+      border-radius: 15px;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 20px auto;
+      overflow: hidden;
+    }
+    #label-container {
+      margin-top: 20px;
+      font-size: 1.3em;
+    }
+    .suggestion-box {
+      background-color: #fff1ea;
+      padding: 15px;
+      border-radius: 15px;
+      margin-top: 20px;
+      font-size: 1em;
+      color: #5a4033;
+      min-height: 60px;
+    }
+    #product-links {
+      margin-top: 15px;
+      font-size: 1em;
+      color: #8b5e3c;
+    }
+    #product-links a {
+      color: #8b5e3c;
+      text-decoration: none;
+    }
+    #product-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanner-container">
+    <h1>La Belle Face Scanner</h1>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+    <div class="suggestion-box" id="suggestion-box">Analyzing your skin type...</div>
+    <div id="product-links"></div>
+  </div>
 
-navigator.mediaDevices.getUserMedia(constraints)
-  .then(stream => {
-    video.srcObject = stream;
-    video.play();
-  })
-  .catch(err => {
-    console.error('Error accessing webcam: ', err);
-  });
-const MODEL_URL = './models'; // Adjust path as needed
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script type="text/javascript">
+    const URL = "https://teachablemachine.withgoogle.com/models/GhG5YpKyYh/";
+    let model, webcam, labelContainer, maxPredictions;
 
-Promise.all([
-  faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-  faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-  faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-  faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
-]).then(startVideo);
-function startVideo() {
-  const video = document.getElementById('videoElement');
-  video.addEventListener('play', () => {
-    const canvas = faceapi.createCanvasFromMedia(video);
-    document.body.append(canvas);
-    const displaySize = { width: video.width, height: video.height };
-    faceapi.matchDimensions(canvas, displaySize);
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
 
-    setInterval(async () => {
-      const detections = await faceapi.detectAllFaces(video)
-        .withFaceLandmarks()
-        .withFaceDescriptors();
-      const resizedDetections = faceapi.resizeResults(detections, displaySize);
-      canvas?.clear();
-      faceapi.draw.drawDetections(canvas, resizedDetections);
-      faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-    }, 100);
-  });
-}
-function displayRecommendations(products) {
-  const container = document.getElementById('productRecommendations');
-  products.forEach(product => {
-    const productElement = document.createElement('div');
-    productElement.innerHTML = `
-      <img src="${product.image}" alt="${product.name}">
-      <p>${product.name}</p>
-      <p>${product.price}</p>
-      <a href="${product.detail_link}" target="_blank">View Product</a>
-    `;
-    container.appendChild(productElement);
-  });
-}
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+
+      webcam = new tmImage.Webcam(300, 300, true);
+      await webcam.setup();
+      await webcam.play();
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
+      labelContainer = document.getElementById("label-container");
+
+      window.requestAnimationFrame(loop);
+    }
+
+    async function loop() {
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+      const prediction = await model.predict(webcam.canvas);
+      prediction.sort((a, b) => b.probability - a.probability);
+      const topPrediction = prediction[0];
+      labelContainer.innerHTML = "Detected: <strong>" + topPrediction.className + "</strong>";
+
+      const suggestionBox = document.getElementById("suggestion-box");
+      const productLinks = document.getElementById("product-links");
+
+      if (topPrediction.className === "Oily") {
+        suggestionBox.innerHTML = "✨ Oily Skin: Use matte foundations, oil-control primer, and blotting powder.";
+        productLinks.innerHTML = `
+          <a href="https://www.sephora.com/product/fenty-pro-filtr-soft-matte-foundation-P425429" target="_blank">Fenty Pro Filt’r Soft Matte Foundation</a><br/>
+          <a href="https://www.sephora.com/product/nyx-shine-killer-primer-P429970" target="_blank">NYX Shine Killer Primer</a><br/>
+          <a href="https://www.sephora.com/product/benefit-hello-happy-matte-powder-P454909" target="_blank">Benefit Hello Happy Blotting Powder</a>
+        `;
+      } else if (topPrediction.className === "Dry") {
+        suggestionBox.innerHTML = "💧 Dry Skin: Use hydrating foundations, luminous primers, and creamy concealers.";
+        productLinks.innerHTML = `
+          <a href="https://www.sephora.com/product/nars-natural-radiant-longwear-foundation-P427631" target="_blank">NARS Natural Radiant Longwear Foundation</a><br/>
+          <a href="https://www.sephora.com/product/milk-hydro-grip-primer-P463099" target="_blank">Milk Hydro Grip Primer</a><br/>
+          <a href="https://www.sephora.com/product/it-cosmetics-cc-cream-P393528" target="_blank">IT Cosmetics CC Cream</a>
+        `;
+      } else if (topPrediction.className === "Normal") {
+        suggestionBox.innerHTML = "🌟 Normal Skin: Use balanced foundations and light powder.";
+        productLinks.innerHTML = `
+          <a href="https://www.sephora.com/product/mac-studio-fix-fluid-SPF-15-P150511" target="_blank">MAC Studio Fix Fluid SPF 15</a><br/>
+          <a href="https://www.sephora.com/product/elf-halo-glow-setting-powder-P482987" target="_blank">e.l.f. Halo Glow Setting Powder</a>
+        `;
+      } else {
+        suggestionBox.innerHTML = "Analyzing...";
+        productLinks.innerHTML = "";
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
+
