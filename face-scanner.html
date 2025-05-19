@@ -3,38 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Face Scanner App</title>
+  <title>La Belle Face Scanner</title>
   <style>
+    /* Use fonts and colors inspired by your Wix site */
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Montserrat', sans-serif;
+      background: #F6D1C1; /* soft pink from your site */
+      color: #5A3E36; /* warm dark brown */
       text-align: center;
-      padding: 20px;
-      background: #f9f9f9;
+      padding: 30px 15px;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
+
+    h1 {
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
     video {
-      border: 2px solid #333;
-      border-radius: 8px;
-      max-width: 100%;
+      border: 3px solid #5A3E36;
+      border-radius: 12px;
+      max-width: 90vw;
       height: auto;
+      box-shadow: 0 0 15px rgba(90, 62, 54, 0.5);
     }
+
     button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 1.1em;
-      cursor: pointer;
-    }
-    #result {
+      background: #5A3E36;
+      color: #F6D1C1;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      font-weight: 700;
       margin-top: 20px;
-      font-weight: bold;
-      color: #007700;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 5px 10px rgba(90, 62, 54, 0.4);
+      transition: background 0.3s ease;
     }
+    button:hover {
+      background: #7f5b4f;
+    }
+
+    #result {
+      margin-top: 25px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      min-height: 80px;
+      max-width: 320px;
+      background: #fff0f0;
+      padding: 15px 20px;
+      border-radius: 15px;
+      color: #5A3E36;
+      box-shadow: 0 0 10px rgba(90, 62, 54, 0.3);
+    }
+
   </style>
 </head>
 <body>
-  <h1>Face Scanner App</h1>
+  <h1>La Belle Face Scanner</h1>
   <video id="video" autoplay playsinline width="320" height="240"></video>
   <br />
-  <button id="analyzeBtn">Analyze Skin</button>
+  <button id="analyzeBtn">Analyze My Skin</button>
   <div id="result"></div>
 
   <script>
@@ -42,22 +79,53 @@
     const analyzeBtn = document.getElementById('analyzeBtn');
     const result = document.getElementById('result');
 
-    // Ask for camera access and stream video
+    // Start camera
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-      } catch (error) {
-        result.textContent = 'Error accessing camera: ' + error.message;
+      } catch (err) {
+        result.textContent = 'Cannot access camera: ' + err.message;
       }
     }
 
+    // Mock skin analysis logic with tailored makeup suggestions
+    function analyzeSkin() {
+      // Randomly simulate one of three skin types & issues for demo
+      const skinTypes = [
+        {
+          type: 'Dry Skin',
+          issues: ['flakiness', 'dullness'],
+          makeup: 'Use hydrating foundation and cream blush. Apply blush on cheeks and temples for a fresh glow.'
+        },
+        {
+          type: 'Oily Skin',
+          issues: ['shine', 'enlarged pores'],
+          makeup: 'Use matte foundation and powder blush. Focus blush application on cheekbones for definition.'
+        },
+        {
+          type: 'Normal/Combination Skin',
+          issues: ['balanced moisture', 'slight redness'],
+          makeup: 'Use lightweight foundation and soft pink blush. Apply blush lightly on apples of cheeks.'
+        }
+      ];
+
+      // Pick a random skin type to simulate analysis
+      const analysis = skinTypes[Math.floor(Math.random() * skinTypes.length)];
+
+      return analysis;
+    }
+
     analyzeBtn.addEventListener('click', () => {
-      // Placeholder for AI skin analysis
-      result.textContent = "Analyzing skin... (this is just a demo)";
+      result.textContent = 'Analyzing your skin... please wait.';
       setTimeout(() => {
-        result.textContent = "Skin analysis complete! Recommended makeup: Natural look with soft blush.";
-      }, 2000);
+        const analysis = analyzeSkin();
+        result.innerHTML = `
+          <strong>Skin Type:</strong> ${analysis.type} <br/>
+          <strong>Issues Detected:</strong> ${analysis.issues.join(', ')} <br/>
+          <strong>Makeup Suggestions:</strong> ${analysis.makeup}
+        `;
+      }, 2500);
     });
 
     startCamera();
